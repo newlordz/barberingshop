@@ -27,6 +27,60 @@
   --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --surface: #ffffff;
+  --surface2: #f4f7fb;
+  --surface3: #e2e8f0;
+  --border: #cbd5e1;
+  --border-focus: #94a3b8;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-glow: rgba(217, 119, 6, 0.25);
+  --accent-soft: rgba(217, 119, 6, 0.1);
+  /* keeping the same danger and success colors, or slightly tweaking */
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --success: #10b981;
+
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 60px rgba(217, 119, 6, 0.15);
+}
+
+/* Overrides for hardcoded dark colors in light mode */
+[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 247, 251, 0.97) 100%);
+}
+
+[data-theme="light"] .sidebar .user,
+[data-theme="light"] .card-header {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .login-card,
+[data-theme="light"] .card,
+[data-theme="light"] .stat,
+[data-theme="light"] .record-panel {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 247, 251, 0.95) 100%);
+}
+
+[data-theme="light"] .main {
+  background-image:
+    radial-gradient(ellipse 120% 70% at 50% -20%, rgba(217, 119, 6, 0.06), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(217, 119, 6, 0.04), transparent 45%);
+}
+
+[data-theme="light"] .login-wrap {
+  background-image:
+    radial-gradient(ellipse 100% 70% at 50% -10%, rgba(217, 119, 6, 0.1), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(217, 119, 6, 0.04), transparent 50%);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -49,6 +103,7 @@ a {
   color: var(--accent);
   text-decoration: none;
 }
+
 a:hover {
   color: var(--accent-hover);
 }
@@ -57,6 +112,7 @@ a:hover {
 .app {
   display: flex;
   min-height: 100vh;
+  position: relative;
 }
 
 .sidebar {
@@ -70,12 +126,16 @@ a:hover {
   display: flex;
   flex-direction: column;
   box-shadow: 8px 0 40px rgba(0, 0, 0, 0.35);
+  transition: transform var(--transition);
+  z-index: 100;
 }
+
 .sidebar .brand {
   padding: 0 1.5rem 1.5rem;
   border-bottom: 1px solid var(--border);
   margin-bottom: 0.75rem;
 }
+
 .sidebar .brand-name {
   font-size: 1.35rem;
   font-weight: 800;
@@ -83,6 +143,7 @@ a:hover {
   letter-spacing: -0.04em;
   text-shadow: 0 0 48px var(--accent-glow);
 }
+
 .sidebar h2 {
   font-size: 0.7rem;
   font-weight: 700;
@@ -91,9 +152,11 @@ a:hover {
   color: var(--text-dim);
   padding: 0 1.5rem 0.75rem;
 }
+
 .sidebar nav {
   flex: 1;
 }
+
 .sidebar nav a {
   display: block;
   padding: 0.8rem 1.5rem;
@@ -103,11 +166,13 @@ a:hover {
   font-weight: 500;
   transition: background var(--transition), color var(--transition), padding-left var(--transition);
 }
+
 .sidebar nav a:hover {
   background: var(--surface3);
   color: var(--accent);
   padding-left: 1.75rem;
 }
+
 .sidebar nav a.active {
   background: var(--accent-soft);
   color: var(--accent);
@@ -115,6 +180,7 @@ a:hover {
   border: 1px solid rgba(228, 182, 74, 0.25);
   box-shadow: 0 0 0 1px rgba(228, 182, 74, 0.1) inset;
 }
+
 .sidebar .user {
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border);
@@ -122,12 +188,14 @@ a:hover {
   color: var(--text-muted);
   background: rgba(0, 0, 0, 0.25);
 }
+
 .sidebar .user strong {
   color: var(--text);
   display: block;
   margin-bottom: 0.25rem;
   font-weight: 600;
 }
+
 .sidebar .user .btn {
   margin-top: 0.5rem;
 }
@@ -141,7 +209,105 @@ a:hover {
     radial-gradient(ellipse 120% 70% at 50% -20%, rgba(228, 182, 74, 0.06), transparent 50%),
     radial-gradient(ellipse 70% 50% at 100% 0%, rgba(228, 182, 74, 0.04), transparent 45%);
   min-height: 100vh;
+  width: 100%;
 }
+
+/* Mobile Toggle */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(180deg, var(--accent) 0%, #c9a035 100%);
+  border-radius: 50%;
+  border: none;
+  color: #000;
+  font-size: 1.5rem;
+  box-shadow: 0 8px 24px rgba(228, 182, 74, 0.4);
+  z-index: 999;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mobile-toggle:active {
+  transform: scale(0.95);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+}
+
+/* Media Queries for Mobile Responsiveness */
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .mobile-toggle {
+    display: flex;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  .main {
+    padding: 1.5rem 1rem;
+    padding-bottom: 80px;
+    /* Space for FAB */
+  }
+
+  .record-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .record-service-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .record-service-row .record-qty-input {
+    width: 100%;
+  }
+
+  .record-service-row .record-line-price {
+    text-align: left;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}
+
 
 /* Login */
 .login-wrap {
@@ -154,6 +320,7 @@ a:hover {
     radial-gradient(ellipse 100% 70% at 50% -10%, rgba(212, 168, 83, 0.1), transparent 55%),
     radial-gradient(ellipse 60% 40% at 80% 80%, rgba(212, 168, 83, 0.04), transparent 50%);
 }
+
 .login-card {
   width: 100%;
   max-width: 440px;
@@ -165,6 +332,7 @@ a:hover {
   padding: 3rem;
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.04) inset, var(--shadow-glow);
 }
+
 .login-card h1 {
   font-size: 1.9rem;
   font-weight: 800;
@@ -172,11 +340,13 @@ a:hover {
   color: var(--accent);
   letter-spacing: -0.04em;
 }
-.login-card > p {
+
+.login-card>p {
   color: var(--text-muted);
   font-size: 1rem;
   margin-bottom: 2rem;
 }
+
 .login-card label {
   display: block;
   font-size: 0.9rem;
@@ -184,6 +354,7 @@ a:hover {
   color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
+
 .login-card input {
   width: 100%;
   padding: 1rem 1.25rem;
@@ -196,11 +367,13 @@ a:hover {
   font-size: 1rem;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+
 .login-card input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-glow);
 }
+
 .login-card button[type="submit"] {
   width: 100%;
   padding: 1rem;
@@ -216,13 +389,16 @@ a:hover {
   transition: filter var(--transition), transform 0.1s ease, box-shadow var(--transition);
   box-shadow: 0 4px 20px rgba(228, 182, 74, 0.35);
 }
+
 .login-card button[type="submit"]:hover {
   filter: brightness(1.1);
   box-shadow: 0 8px 28px rgba(228, 182, 74, 0.4);
 }
+
 .login-card button[type="submit"]:active {
   transform: scale(0.98);
 }
+
 .login-card .error {
   background: rgba(229, 72, 77, 0.15);
   color: #fda4a8;
@@ -238,9 +414,11 @@ a:hover {
   position: relative;
   display: block;
 }
+
 .password-wrap input {
   padding-right: 2.75rem;
 }
+
 .password-wrap .password-toggle {
   position: absolute;
   right: 0.5rem;
@@ -259,20 +437,24 @@ a:hover {
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
+
 .password-wrap .password-toggle:hover {
   background: var(--surface3);
   color: var(--accent);
   border-color: var(--accent);
 }
+
 .password-wrap-inline {
   display: inline-flex;
   width: auto;
   min-width: 160px;
 }
+
 .password-wrap-inline input {
   width: 100%;
   min-width: 120px;
 }
+
 .login-card .password-wrap input,
 .change-password-card .password-wrap input {
   padding-right: 2.75rem;
@@ -282,9 +464,11 @@ a:hover {
 .change-password-card {
   max-width: 420px;
 }
+
 .change-password-card h1 {
   font-size: 1.5rem;
 }
+
 .change-password-card p {
   margin-bottom: 1.5rem;
 }
@@ -303,9 +487,11 @@ a:hover {
   border: none;
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.2s;
 }
+
 .btn:active {
   transform: scale(0.98);
 }
+
 .btn-primary {
   background: linear-gradient(180deg, var(--accent) 0%, #c9a035 100%);
   color: #0a0a0a;
@@ -313,31 +499,38 @@ a:hover {
   box-shadow: 0 4px 16px rgba(228, 182, 74, 0.35);
   border-radius: var(--radius-sm);
 }
+
 .btn-primary:hover {
   filter: brightness(1.1);
   box-shadow: 0 6px 24px rgba(228, 182, 74, 0.4);
 }
+
 .btn-primary:active {
   box-shadow: 0 2px 12px rgba(228, 182, 74, 0.4);
 }
+
 .btn-ghost {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
 }
+
 .btn-ghost:hover {
   background: var(--surface2);
   border-color: var(--border-focus);
   color: var(--accent);
 }
+
 .btn-danger {
   background: var(--danger);
   color: #fff;
 }
+
 .btn-danger:hover {
   background: var(--danger-hover);
   box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
 }
+
 .btn-sm {
   padding: 0.4rem 0.85rem;
   font-size: 0.875rem;
@@ -347,9 +540,11 @@ a:hover {
 .form-group {
   margin-bottom: 1.1rem;
 }
+
 .form-group:last-child {
   margin-bottom: 0;
 }
+
 .form-group label {
   display: block;
   font-size: 0.9rem;
@@ -357,6 +552,7 @@ a:hover {
   margin-bottom: 0.4rem;
   color: var(--text-muted);
 }
+
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -369,6 +565,7 @@ a:hover {
   font: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -376,11 +573,13 @@ a:hover {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
+
 .form-row {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
 }
+
 .form-row .form-group {
   flex: 1;
   min-width: 160px;
@@ -395,6 +594,7 @@ a:hover {
   color: var(--text);
   line-height: 1.2;
 }
+
 .page-desc {
   color: var(--text-muted);
   font-size: 1rem;
@@ -413,16 +613,20 @@ a:hover {
   margin-bottom: 1.75rem;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+
 .card:hover {
   border-color: var(--border-focus);
 }
+
 .card-elevated {
   box-shadow: var(--shadow), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   border-color: rgba(255, 255, 255, 0.05);
 }
+
 .card-elevated:hover {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
+
 .card-header {
   padding: 1.35rem 1.75rem;
   border-bottom: 1px solid var(--border);
@@ -433,26 +637,32 @@ a:hover {
   gap: 1rem;
   background: rgba(0, 0, 0, 0.25);
 }
+
 .card-header h3 {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.03em;
 }
+
 .table-wrap {
   overflow-x: auto;
   border-radius: 0 0 var(--radius) var(--radius);
 }
+
 table {
   width: 100%;
   border-collapse: collapse;
 }
-th, td {
+
+th,
+td {
   text-align: left;
   padding: 1rem 1.75rem;
   border-bottom: 1px solid var(--border);
   transition: background var(--transition);
 }
+
 th {
   font-size: 0.7rem;
   font-weight: 700;
@@ -460,12 +670,15 @@ th {
   letter-spacing: 0.1em;
   color: var(--text-dim);
 }
+
 tr:last-child td {
   border-bottom: none;
 }
+
 tr:hover td {
   background: var(--surface2);
 }
+
 .table-styled th {
   background: var(--surface2);
   color: var(--text-muted);
@@ -479,24 +692,29 @@ tr:hover td {
   font-size: 0.75rem;
   font-weight: 500;
 }
+
 .badge-admin {
   background: var(--accent);
   color: var(--bg);
 }
+
 .badge-barber {
   background: var(--surface3);
   color: var(--text-muted);
 }
+
 .badge-cash {
   background: rgba(34, 197, 94, 0.2);
   color: #4ade80;
   border: 1px solid rgba(34, 197, 94, 0.35);
 }
+
 .badge-momo {
   background: rgba(168, 85, 247, 0.2);
   color: #c084fc;
   border: 1px solid rgba(168, 85, 247, 0.35);
 }
+
 .payment-ref {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -510,6 +728,7 @@ tr:hover td {
   gap: 1.5rem;
   margin-bottom: 2.25rem;
 }
+
 .stat {
   background: linear-gradient(165deg, rgba(17, 19, 24, 0.85) 0%, rgba(24, 27, 34, 0.9) 100%);
   backdrop-filter: blur(12px);
@@ -518,14 +737,17 @@ tr:hover td {
   padding: 1.75rem;
   transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
+
 .stat:hover {
   border-color: var(--border-focus);
   box-shadow: var(--shadow);
 }
+
 .stat-card:hover {
   border-color: rgba(228, 182, 74, 0.35);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(228, 182, 74, 0.15);
 }
+
 .stat .value {
   font-size: 2.1rem;
   font-weight: 800;
@@ -533,12 +755,14 @@ tr:hover td {
   letter-spacing: -0.04em;
   line-height: 1.15;
 }
+
 .stat .label {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-muted);
   margin-top: 0.5rem;
 }
+
 .loading-text {
   color: var(--text-muted);
 }
@@ -548,9 +772,11 @@ tr:hover td {
   max-width: 960px;
   margin: 0 auto;
 }
+
 .record-hero {
   margin-bottom: 2rem;
 }
+
 .record-title {
   font-size: 1.85rem;
   font-weight: 800;
@@ -558,29 +784,35 @@ tr:hover td {
   color: var(--text);
   margin-bottom: 0.35rem;
 }
+
 .record-subtitle {
   font-size: 1.05rem;
   color: var(--text-muted);
   font-weight: 500;
 }
+
 .record-subtitle strong {
   color: var(--accent);
 }
+
 .record-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
+
 .record-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
+
 @media (max-width: 720px) {
   .record-grid {
     grid-template-columns: 1fr;
   }
 }
+
 .record-panel {
   background: linear-gradient(165deg, rgba(17, 19, 24, 0.9) 0%, rgba(24, 27, 34, 0.95) 100%);
   backdrop-filter: blur(16px);
@@ -590,9 +822,11 @@ tr:hover td {
   box-shadow: var(--shadow);
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+
 .record-panel:hover {
   border-color: var(--border-focus);
 }
+
 .record-panel-title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -602,11 +836,13 @@ tr:hover td {
   border-bottom: 1px solid var(--border);
   letter-spacing: -0.03em;
 }
+
 .record-hint {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin-bottom: 1rem;
 }
+
 .record-label {
   display: block;
   font-size: 0.9rem;
@@ -614,10 +850,12 @@ tr:hover td {
   color: var(--text-muted);
   margin-bottom: 0.45rem;
 }
+
 .record-optional {
   font-weight: 400;
   color: var(--text-dim);
 }
+
 .record-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -629,18 +867,22 @@ tr:hover td {
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .record-input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
+
 .record-input-lg {
   padding: 0.9rem 1.1rem;
   font-size: 1.05rem;
 }
+
 .record-customer-wrap {
   position: relative;
 }
+
 .record-suggestions {
   position: absolute;
   left: 0;
@@ -656,9 +898,11 @@ tr:hover td {
   box-shadow: var(--shadow);
   display: none;
 }
+
 .record-suggestions.is-open {
   display: block;
 }
+
 .suggestion-item {
   display: block;
   width: 100%;
@@ -672,44 +916,53 @@ tr:hover td {
   cursor: pointer;
   transition: background 0.15s;
 }
+
 .suggestion-item:hover {
   background: var(--surface3);
 }
+
 .suggestion-item-new {
   color: var(--accent);
   font-weight: 500;
 }
+
 .suggestion-phone {
   display: block;
   font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: 0.2rem;
 }
+
 .record-services-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
+
 .record-service-row {
   display: grid;
   grid-template-columns: 1fr auto auto auto;
   gap: 0.75rem;
   align-items: center;
 }
+
 .record-service-row .record-service-select {
   min-width: 0;
 }
+
 .record-qty-input {
   width: 70px;
   text-align: center;
   padding: 0.6rem;
 }
+
 .record-line-price {
   font-weight: 600;
   color: var(--accent);
   min-width: 4rem;
   text-align: right;
 }
+
 .record-remove-btn {
   width: 36px;
   height: 36px;
@@ -725,14 +978,17 @@ tr:hover td {
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
+
 .record-remove-btn:hover {
   background: var(--danger);
   color: #fff;
   border-color: var(--danger);
 }
+
 .record-add-service {
   margin-top: 0.25rem;
 }
+
 .record-total-wrap {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
@@ -742,17 +998,20 @@ tr:hover td {
   justify-content: space-between;
   gap: 1rem;
 }
+
 .record-total-label {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-muted);
 }
+
 .record-total {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: -0.02em;
 }
+
 .record-payment-section {
   background: linear-gradient(180deg, var(--surface) 0%, var(--surface2) 100%);
   border: 1px solid var(--border);
@@ -761,15 +1020,18 @@ tr:hover td {
   box-shadow: var(--shadow);
   transition: border-color var(--transition);
 }
+
 .record-payment-section:hover {
   border-color: var(--border-focus);
 }
+
 .payment-method-options {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 0;
 }
+
 .payment-option {
   display: inline-flex;
   align-items: center;
@@ -781,36 +1043,44 @@ tr:hover td {
   border-radius: var(--radius-sm);
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
+
 .payment-option:hover {
   border-color: var(--border-focus);
   background: var(--surface2);
 }
+
 .payment-option input {
   margin: 0;
   width: 1rem;
   height: 1rem;
   accent-color: var(--accent);
 }
-.payment-option input:checked + .payment-option-label {
+
+.payment-option input:checked+.payment-option-label {
   color: var(--accent);
   font-weight: 600;
 }
+
 .payment-option:has(input:checked) {
   border-color: var(--accent);
   background: var(--accent-soft);
   box-shadow: 0 0 0 1px var(--accent);
 }
+
 .payment-option-label {
   font-size: 0.95rem;
   color: var(--text);
   transition: color 0.2s;
 }
+
 .record-momo-wrap {
   margin-top: 1rem;
 }
+
 .record-momo-wrap .record-input {
   max-width: 280px;
 }
+
 .record-footer {
   background: linear-gradient(180deg, var(--surface) 0%, var(--surface2) 100%);
   border: 1px solid var(--border);
@@ -818,13 +1088,16 @@ tr:hover td {
   padding: 1.6rem;
   box-shadow: var(--shadow);
 }
+
 .record-notes-wrap {
   margin-bottom: 1.25rem;
 }
+
 .record-notes-input {
   resize: vertical;
   min-height: 72px;
 }
+
 .record-submit {
   padding: 0.9rem 1.75rem;
   font-size: 1.05rem;
@@ -837,10 +1110,12 @@ tr:hover td {
   align-items: center;
   flex-wrap: wrap;
 }
+
 .service-form-inline .record-input {
   width: auto;
   min-width: 140px;
 }
+
 .service-form-inline #service-price {
   min-width: 100px;
 }
@@ -849,6 +1124,7 @@ tr:hover td {
 .visit-services-list {
   margin-top: 1rem;
 }
+
 .visit-service-row {
   display: flex;
   align-items: center;
@@ -856,22 +1132,27 @@ tr:hover td {
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
 }
+
 .visit-service-row select {
   flex: 2;
   min-width: 0;
 }
+
 .visit-service-row input[type="number"] {
   width: 70px;
 }
+
 .visit-total {
   margin-top: 1rem;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--accent);
 }
+
 .hidden {
   display: none !important;
 }
+
 .empty-state {
   padding: 1.5rem;
   text-align: center;
@@ -889,14 +1170,17 @@ tr:hover td {
   font: inherit;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+
 .input-styled:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
+
 .input-styled:hover:not(:focus) {
   border-color: var(--border-focus);
 }
+
 .filters {
   display: flex;
   gap: 0.85rem;
@@ -904,6 +1188,7 @@ tr:hover td {
   align-items: center;
   margin-bottom: 1.35rem;
 }
+
 .filters input,
 .filters select {
   padding: 0.6rem 1rem;
@@ -914,9 +1199,11 @@ tr:hover td {
   font: inherit;
   transition: border-color var(--transition);
 }
+
 .filters-styled .input-styled {
   min-width: 150px;
 }
+
 .user-form-inline,
 .barber-form-inline {
   display: flex;
@@ -924,6 +1211,7 @@ tr:hover td {
   align-items: center;
   flex-wrap: wrap;
 }
+
 .user-form-inline .input-styled,
 .barber-form-inline .input-styled {
   min-width: 120px;
@@ -942,19 +1230,23 @@ tr:hover td {
   animation: toastIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
+
 .toast.success {
   background: linear-gradient(180deg, var(--success) 0%, #2d9d6a 100%);
   color: #fff;
 }
+
 .toast.error {
   background: linear-gradient(180deg, var(--danger) 0%, #ce3c42 100%);
   color: #fff;
 }
+
 @keyframes toastIn {
   from {
     opacity: 0;
     transform: translateY(12px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

@@ -1,5 +1,11 @@
 const API = '/api';
 
+// Initialize theme from localStorage
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+
 let currentUser = null;
 
 function show(el) {
@@ -106,6 +112,38 @@ document.body.addEventListener('click', (e) => {
   btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
   btn.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
   btn.textContent = isPassword ? '🙈' : '👁';
+});
+
+// Mobile menu toggle
+document.getElementById('mobile-toggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+});
+
+document.getElementById('sidebar-overlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+});
+
+// Close sidebar on link click
+document.querySelectorAll('.sidebar nav a').forEach((a) => {
+  a.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+  });
+});
+
+// Theme toggle
+document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  if (newTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  }
 });
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
