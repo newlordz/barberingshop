@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barber Shop Sales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=3">
+</head>
+<body>
+  <div id="login-view" class="login-wrap hidden">
+    <div class="login-card">
+      <h1>Barber Shop Sales</h1>
+      <p>Sign in to continue</p>
+      <div id="login-error" class="error hidden"></div>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="username">
+        <label for="password">Password</label>
+        <div class="password-wrap">
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+          <button type="button" class="password-toggle" aria-label="Show password" title="Show password">👁</button>
+        </div>
+        <button type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="change-password-view" class="login-wrap hidden">
+    <div class="login-card change-password-card">
+      <h1>Set your password</h1>
+      <p>You must set a new password before continuing. This keeps your account private.</p>
+      <div id="change-pw-error" class="error hidden"></div>
+      <form id="change-password-form">
+        <label for="new-password">New password</label>
+        <div class="password-wrap">
+          <input type="password" id="new-password" name="newPassword" required minlength="6" placeholder="At least 6 characters">
+          <button type="button" class="password-toggle" aria-label="Show password">👁</button>
+        </div>
+        <label for="confirm-password">Confirm new password</label>
+        <div class="password-wrap">
+          <input type="password" id="confirm-password" name="confirmPassword" required minlength="6" placeholder="Same as above">
+          <button type="button" class="password-toggle" aria-label="Show password">👁</button>
+        </div>
+        <button type="submit">Set password & continue</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-view" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-name">Barber Sales</span>
+      </div>
+      <h2>Menu</h2>
+      <nav>
+        <a href="#dashboard" data-route="dashboard">Dashboard</a>
+        <a href="#record" data-route="record" data-barber-only>Record visit</a>
+        <a href="#visits" data-route="visits">Visits</a>
+        <a href="#barbers" data-route="barbers" data-admin>Barbers</a>
+        <a href="#services" data-route="services" data-admin>Hair cut styles</a>
+        <a href="#reports" data-route="reports" data-admin>Reports</a>
+        <a href="#users" data-route="users" data-admin>Users</a>
+        <a href="#password-requests" data-route="password-requests" data-admin>Password requests</a>
+      </nav>
+      <div class="user">
+        <strong id="sidebar-username"></strong><br>
+        <span id="sidebar-role"></span>
+        <button type="button" class="btn btn-ghost btn-sm" id="logout-btn" style="margin-top:0.5rem">Log out</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="request-password-reset-btn" data-barber-only style="margin-top:0.35rem;display:none">Request password reset</button>
+      </div>
+    </aside>
+    <main class="main">
+      <div id="page-content"></div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

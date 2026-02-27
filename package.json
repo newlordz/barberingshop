@@ -1,0 +1,21 @@
+{
+  "name": "barber-shop-sales",
+  "version": "1.0.0",
+  "description": "Sales app for barbering shop - customers, services, barbers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node scripts/init-db.js",
+    "clear-barbers": "node scripts/clear-barbers.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.6.0",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
