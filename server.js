@@ -14,6 +14,15 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const db = getDb();
 initSchema(db);
 
+// Auto-seed default admin if database is empty
+const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+if (userCount === 0) {
+  const defaultAdminPassword = 'admin123';
+  const hashed = bcrypt.hashSync(defaultAdminPassword, 10);
+  db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run('admin', hashed, 'admin');
+  console.log('Default admin user created. Username: admin, Password: admin123');
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
