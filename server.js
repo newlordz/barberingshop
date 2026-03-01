@@ -173,9 +173,17 @@ app.post('/api/barbers', requireAdmin, (req, res) => {
 app.delete('/api/barbers/:id', requireAdmin, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'Invalid id' });
-  db.prepare('DELETE FROM barbers WHERE id = ?').run(id);
+  // Cascade: unlink user accounts, delete visit line items, visits, then the barber
+  db.transaction(() => {
+    db.prepare('DELETE FROM password_reset_requests WHERE user_id IN (SELECT id FROM users WHERE barber_id = ?)').run(id);
+    db.prepare('DELETE FROM users WHERE barber_id = ?').run(id);
+    db.prepare('DELETE FROM visit_services WHERE visit_id IN (SELECT id FROM visits WHERE barber_id = ?)').run(id);
+    db.prepare('DELETE FROM visits WHERE barber_id = ?').run(id);
+    db.prepare('DELETE FROM barbers WHERE id = ?').run(id);
+  })();
   res.json({ ok: true });
 });
+
 
 // ----- Services (admin: add/remove/list) -----
 app.get('/api/services', requireLogin, (req, res) => {
@@ -195,8 +203,15 @@ app.post('/api/services', requireAdmin, (req, res) => {
 app.delete('/api/services/:id', requireAdmin, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'Invalid id' });
-  db.prepare('DELETE FROM services WHERE id = ?').run(id);
-  res.json({ ok: true });
+  try {
+    db.prepare('DELETE FROM services WHERE id = ?').run(id);
+    res.json({ ok: true });
+  } catch (e) {
+    if (e.code === 'SQLITE_CONSTRAINT_FOREIGNKEY' || e.message?.includes('FOREIGN KEY')) {
+      return res.status(409).json({ error: 'This service is used in existing visits. Remove those visits first.' });
+    }
+    throw e;
+  }
 });
 
 // ----- Customers (list + create for recording visits) -----
@@ -213,6 +228,78 @@ app.get('/api/customers', requireLogin, (req, res) => {
     rows = db.prepare('SELECT id, name, phone FROM customers ORDER BY name LIMIT 100').all();
   }
   res.json(rows);
+});
+
+// ----- CSV Export (admin only) -----
+app.get('/api/visits/export', requireAdmin, (req, res) => {
+  const barberId = req.query.barber_id ? parseInt(req.query.barber_id, 10) : null;
+  const from = (req.query.from || '').trim();
+  const to = (req.query.to || '').trim();
+
+  let sql = `
+    SELECT v.id, v.visit_date, v.total_amount, v.notes,
+           COALESCE(v.payment_method, 'cash') AS payment_method,
+           v.momo_reference,
+           b.name AS barber_name, c.name AS customer_name
+    FROM visits v
+    JOIN barbers b ON b.id = v.barber_id
+    JOIN customers c ON c.id = v.customer_id
+    WHERE 1=1
+  `;
+  const params = [];
+  if (barberId) { sql += ' AND v.barber_id = ?'; params.push(barberId); }
+  if (from) { sql += ' AND v.visit_date >= ?'; params.push(from); }
+  if (to) { sql += ' AND v.visit_date <= ?'; params.push(to); }
+  sql += ' ORDER BY v.visit_date DESC, v.created_at DESC';
+
+  const rows = db.prepare(sql).all(...params);
+
+  // Fetch services for all visits
+  const visitIds = rows.map((r) => r.id);
+  const servicesByVisit = {};
+  if (visitIds.length) {
+    const placeholders = visitIds.map(() => '?').join(',');
+    db.prepare(
+      `SELECT vs.visit_id, s.name AS service_name, vs.quantity
+       FROM visit_services vs JOIN services s ON s.id = vs.service_id
+       WHERE vs.visit_id IN (${placeholders})`
+    ).all(...visitIds).forEach((s) => {
+      if (!servicesByVisit[s.visit_id]) servicesByVisit[s.visit_id] = [];
+      servicesByVisit[s.visit_id].push(s);
+    });
+  }
+
+  function csvCell(v) {
+    if (v == null) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  const headers = ['Date', 'Barber', 'Customer', 'Services', 'Payment Method', 'MoMo Reference', 'Total (GHS)', 'Notes'];
+  const lines = [headers.join(',')];
+  rows.forEach((v) => {
+    const svcs = (servicesByVisit[v.id] || [])
+      .map((s) => s.service_name + (s.quantity > 1 ? ' x' + s.quantity : ''))
+      .join('; ');
+    lines.push([
+      csvCell(v.visit_date),
+      csvCell(v.barber_name),
+      csvCell(v.customer_name),
+      csvCell(svcs),
+      csvCell(v.payment_method === 'momo' ? 'MoMo' : 'Cash'),
+      csvCell(v.momo_reference || ''),
+      csvCell(Number(v.total_amount).toFixed(2)),
+      csvCell(v.notes || ''),
+    ].join(','));
+  });
+
+  const filename = `visits_${from || 'all'}_to_${to || 'all'}.csv`;
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(lines.join('\r\n'));
 });
 
 app.post('/api/customers', requireLogin, (req, res) => {
@@ -420,9 +507,27 @@ app.post('/api/users/:id/reset-password', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete('/api/users/:id', requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const user = db.prepare('SELECT id, role FROM users WHERE id = ?').get(id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.role === 'admin') return res.status(403).json({ error: 'Cannot delete the admin account' });
+  db.prepare('DELETE FROM password_reset_requests WHERE user_id = ?').run(id);
+  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  res.json({ ok: true });
+});
+
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Global error handler — returns JSON instead of HTML stack trace
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
 app.listen(PORT, () => {

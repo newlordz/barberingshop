@@ -24,7 +24,7 @@ async function api(path, options = {}) {
     },
     credentials: 'include',
   });
-  const data = res.ok ? (await res.json().catch(() => ({}))) : null;
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data?.error || res.statusText);
     err.status = res.status;
@@ -260,7 +260,7 @@ async function renderDashboard(container) {
         <div class="label">${isBarber ? 'Your visits' : 'Total visits'}</div>
       </div>
       <div class="stat stat-card">
-        <div class="value">$${Number(summary.overall.total_revenue).toFixed(2)}</div>
+        <div class="value">₵${Number(summary.overall.total_revenue).toFixed(2)}</div>
         <div class="label">${isBarber ? 'Your revenue' : 'Total revenue'}</div>
       </div>
     </div>
@@ -274,7 +274,7 @@ async function renderDashboard(container) {
               <tr>
                 <td>${escapeHtml(b.name)}</td>
                 <td>${b.visit_count}</td>
-                <td>$${Number(b.total_sales).toFixed(2)}</td>
+                <td>₵${Number(b.total_sales).toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -320,17 +320,17 @@ async function renderRecord(container) {
               <div class="visit-service-row record-service-row">
                 <select class="record-service-select record-input" name="service_id" required>
                   <option value="">Select style</option>
-                  ${services.map((s) => `<option value="${s.id}" data-price="${s.price}">${escapeHtml(s.name)} — $${Number(s.price).toFixed(2)}</option>`).join('')}
+                  ${services.map((s) => `<option value="${s.id}" data-price="${s.price}">${escapeHtml(s.name)} — ₵${Number(s.price).toFixed(2)}</option>`).join('')}
                 </select>
                 <input type="number" class="record-qty record-input record-qty-input" value="1" min="1" max="99" aria-label="Quantity">
-                <span class="record-line-price">$0.00</span>
+                <span class="record-line-price">₵0.00</span>
                 <button type="button" class="record-remove-btn record-remove" aria-label="Remove">×</button>
               </div>
             </div>
             <button type="button" class="btn btn-ghost record-add-service" id="add-service-row">+ Add another service</button>
             <div class="record-total-wrap">
               <span class="record-total-label">Total</span>
-              <span class="record-total" id="record-total">$0.00</span>
+              <span class="record-total" id="record-total">₵0.00</span>
             </div>
           </section>
         </div>
@@ -399,9 +399,9 @@ async function renderRecord(container) {
     const row = document.createElement('div');
     row.className = 'visit-service-row record-service-row';
     row.innerHTML = `
-      <select class="record-service-select record-input" name="service_id"><option value="">Select style</option>${services.map((s) => `<option value="${s.id}" data-price="${s.price}">${escapeHtml(s.name)} — $${Number(s.price).toFixed(2)}</option>`).join('')}</select>
+      <select class="record-service-select record-input" name="service_id"><option value="">Select style</option>${services.map((s) => `<option value="${s.id}" data-price="${s.price}">${escapeHtml(s.name)} — ₵${Number(s.price).toFixed(2)}</option>`).join('')}</select>
       <input type="number" class="record-qty record-input record-qty-input" value="1" min="1" max="99" aria-label="Quantity">
-      <span class="record-line-price">$0.00</span>
+      <span class="record-line-price">₵0.00</span>
       <button type="button" class="record-remove-btn record-remove" aria-label="Remove">×</button>
     `;
     row.querySelector('.record-remove').onclick = () => { row.remove(); updateRecordTotal(); };
@@ -418,10 +418,10 @@ async function renderRecord(container) {
       const line = price * qty;
       total += line;
       const span = row.querySelector('.record-line-price');
-      if (span) span.textContent = '$' + line.toFixed(2);
+      if (span) span.textContent = '₵' + line.toFixed(2);
     });
     const totalEl = document.getElementById('record-total');
-    if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
+    if (totalEl) totalEl.textContent = '₵' + total.toFixed(2);
   }
   container.querySelector('#add-service-row').onclick = addServiceRow;
   container.querySelectorAll('.record-service-select').forEach((s) => (s.onchange = updateRecordTotal));
@@ -531,6 +531,7 @@ async function renderVisits(container) {
       <input type="date" id="visits-to" class="input-styled">
       ${filterBarber}
       <button type="button" class="btn btn-primary" id="visits-refresh">Refresh</button>
+      ${currentUser.role === 'admin' ? '<button type="button" class="btn btn-ghost" id="visits-export">⬇ Export CSV</button>' : ''}
     </div>
     <div class="card card-elevated">
       <div class="table-wrap">
@@ -559,7 +560,7 @@ async function renderVisits(container) {
           <td>${escapeHtml(v.customer_name)}</td>
           <td>${(v.services || []).map((s) => `${s.service_name}${s.quantity > 1 ? ' ×' + s.quantity : ''}`).join(', ') || '—'}</td>
           <td><span class="badge badge-${pay}">${payLabel}</span>${ref}</td>
-          <td>$${Number(v.total_amount).toFixed(2)}</td>
+          <td>₵${Number(v.total_amount).toFixed(2)}</td>
         </tr>
       `;
         }
@@ -579,6 +580,17 @@ async function renderVisits(container) {
   document.getElementById('visits-to').onchange = refresh;
   const barberSel = document.getElementById('visits-barber');
   if (barberSel) barberSel.onchange = refresh;
+  const exportBtn = document.getElementById('visits-export');
+  if (exportBtn) {
+    exportBtn.onclick = () => {
+      const from = document.getElementById('visits-from').value;
+      const to = document.getElementById('visits-to').value;
+      const barberId = document.getElementById('visits-barber')?.value || '';
+      let url = `/api/visits/export?from=${from}&to=${to}`;
+      if (barberId) url += `&barber_id=${barberId}`;
+      window.location.href = url;
+    };
+  }
 }
 
 // ----- Barbers (admin) -----
@@ -617,11 +629,16 @@ async function renderBarbers(container) {
       .join('');
     container.querySelectorAll('#barbers-tbody button').forEach((btn) => {
       btn.onclick = async () => {
-        if (!confirm('Remove this barber? This will not delete their past visits.')) return;
-        await api('/barbers/' + btn.dataset.id, { method: 'DELETE' });
-        list = await api('/barbers');
-        renderRows();
-        toast('Barber removed');
+        const ok = await showConfirm('Remove this barber? Their past visits will be kept.');
+        if (!ok) return;
+        try {
+          await api('/barbers/' + btn.dataset.id, { method: 'DELETE' });
+          list = await api('/barbers');
+          renderRows();
+          toast('Barber removed');
+        } catch (err) {
+          toast(err.data?.error || err.message || 'Failed to remove', 'error');
+        }
       };
     });
   }
@@ -668,7 +685,7 @@ async function renderServices(container) {
         (s) => `
         <tr>
           <td>${escapeHtml(s.name)}</td>
-          <td>$${Number(s.price).toFixed(2)}</td>
+          <td>₵${Number(s.price).toFixed(2)}</td>
           <td><button type="button" class="btn btn-danger btn-sm" data-id="${s.id}">Remove</button></td>
         </tr>
       `
@@ -676,11 +693,16 @@ async function renderServices(container) {
       .join('');
     container.querySelectorAll('#services-tbody button').forEach((btn) => {
       btn.onclick = async () => {
-        if (!confirm('Remove this service?')) return;
-        await api('/services/' + btn.dataset.id, { method: 'DELETE' });
-        list = await api('/services');
-        renderRows();
-        toast('Service removed');
+        const ok = await showConfirm('Remove this hair cut style?');
+        if (!ok) return;
+        try {
+          await api('/services/' + btn.dataset.id, { method: 'DELETE' });
+          list = await api('/services');
+          renderRows();
+          toast('Service removed');
+        } catch (err) {
+          toast(err.data?.error || err.message || 'Failed to remove', 'error');
+        }
       };
     });
   }
@@ -721,7 +743,7 @@ async function renderReports(container) {
         <div class="label">Total visits</div>
       </div>
       <div class="stat stat-card">
-        <div class="value">$${Number(summary.overall.total_revenue).toFixed(2)}</div>
+        <div class="value">₵${Number(summary.overall.total_revenue).toFixed(2)}</div>
         <div class="label">Total revenue</div>
       </div>
     </div>
@@ -747,12 +769,12 @@ async function renderReports(container) {
   function fill() {
     document.getElementById('reports-barbers').innerHTML = summary.byBarber
       .map(
-        (b) => `<tr><td>${escapeHtml(b.name)}</td><td>${b.visit_count}</td><td>$${Number(b.total_sales).toFixed(2)}</td></tr>`
+        (b) => `<tr><td>${escapeHtml(b.name)}</td><td>${b.visit_count}</td><td>₵${Number(b.total_sales).toFixed(2)}</td></tr>`
       )
       .join('');
     document.getElementById('reports-services').innerHTML = (summary.byService || [])
       .map(
-        (s) => `<tr><td>${escapeHtml(s.name)}</td><td>${s.times_rendered}</td><td>$${Number(s.revenue).toFixed(2)}</td></tr>`
+        (s) => `<tr><td>${escapeHtml(s.name)}</td><td>${s.times_rendered}</td><td>₵${Number(s.revenue).toFixed(2)}</td></tr>`
       )
       .join('');
   }
@@ -804,8 +826,9 @@ async function renderUsers(container) {
         <td>${escapeHtml(u.username)}</td>
         <td><span class="badge badge-${u.role}">${u.role}</span></td>
         <td>${u.barber_name ? escapeHtml(u.barber_name) : '—'}</td>
-        <td>
-          <button type="button" class="btn btn-warning btn-sm reset-user-pw" data-id="${u.id}">Reset Password</button>
+        <td class="user-actions">
+          ${u.role !== 'admin' ? `<button type="button" class="btn btn-warning btn-sm reset-user-pw" data-id="${u.id}">Reset Password</button>` : ''}
+          ${u.role !== 'admin' ? `<button type="button" class="btn btn-danger btn-sm delete-user" data-id="${u.id}" data-name="${escapeHtml(u.username)}">Delete</button>` : ''}
         </td>
       </tr>
     `
@@ -832,24 +855,26 @@ async function renderUsers(container) {
             <td>${escapeHtml(u.username)}</td>
             <td><span class="badge badge-${u.role}">${u.role}</span></td>
             <td>${u.barber_name ? escapeHtml(u.barber_name) : '—'}</td>
-            <td>
-              <button type="button" class="btn btn-warning btn-sm reset-user-pw" data-id="${u.id}">Reset Password</button>
+            <td class="user-actions">
+              ${u.role !== 'admin' ? `<button type="button" class="btn btn-warning btn-sm reset-user-pw" data-id="${u.id}">Reset Password</button>` : ''}
+              ${u.role !== 'admin' ? `<button type="button" class="btn btn-danger btn-sm delete-user" data-id="${u.id}" data-name="${escapeHtml(u.username)}">Delete</button>` : ''}
             </td>
           </tr>
         `
         )
         .join('');
-      attachResetListeners();
+      attachUserListeners();
       toast('User added');
     } catch (err) {
       toast(err.data?.error || err.message || 'Failed', 'error');
     }
   });
 
-  function attachResetListeners() {
+  function attachUserListeners() {
     container.querySelectorAll('.reset-user-pw').forEach((btn) => {
       btn.onclick = async () => {
-        if (!confirm("Are you sure you want to reset this user's password to the default?")) return;
+        const ok = await showConfirm("Reset this user's password to the default?", 'Reset');
+        if (!ok) return;
         try {
           await api('/users/' + btn.dataset.id + '/reset-password', { method: 'POST' });
           toast('Password reset to default (password).');
@@ -858,7 +883,33 @@ async function renderUsers(container) {
         }
       };
     });
+    container.querySelectorAll('.delete-user').forEach((btn) => {
+      btn.onclick = async () => {
+        const ok = await showConfirm(`Delete user "${btn.dataset.name}"? This cannot be undone.`, 'Delete');
+        if (!ok) return;
+        try {
+          await api('/users/' + btn.dataset.id, { method: 'DELETE' });
+          list = await api('/users');
+          // re-render the tbody
+          document.getElementById('users-tbody').innerHTML = list.map((u) => `
+            <tr>
+              <td>${escapeHtml(u.username)}</td>
+              <td><span class="badge badge-${u.role}">${u.role}</span></td>
+              <td>${u.barber_name ? escapeHtml(u.barber_name) : '—'}</td>
+              <td class="user-actions">
+                ${u.role !== 'admin' ? `<button type="button" class="btn btn-warning btn-sm reset-user-pw" data-id="${u.id}">Reset Password</button>` : ''}
+                ${u.role !== 'admin' ? `<button type="button" class="btn btn-danger btn-sm delete-user" data-id="${u.id}" data-name="${escapeHtml(u.username)}">Delete</button>` : ''}
+              </td>
+            </tr>`).join('');
+          attachUserListeners();
+          toast('User deleted');
+        } catch (err) {
+          toast(err.data?.error || err.message || 'Failed to delete', 'error');
+        }
+      };
+    });
   }
+  attachUserListeners();
   attachResetListeners();
 }
 
@@ -945,6 +996,31 @@ function escapeHtml(s) {
   const div = document.createElement('div');
   div.textContent = s;
   return div.innerHTML;
+}
+
+function showConfirm(message, okLabel = 'Remove') {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('confirm-modal');
+    const msg = document.getElementById('confirm-modal-msg');
+    const okBtn = document.getElementById('confirm-modal-ok');
+    const cancelBtn = document.getElementById('confirm-modal-cancel');
+    msg.textContent = message;
+    okBtn.textContent = okLabel;
+    overlay.classList.remove('hidden');
+    function cleanup(result) {
+      overlay.classList.add('hidden');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onBackdrop);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    function onBackdrop(e) { if (e.target === overlay) cleanup(false); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onBackdrop);
+  });
 }
 
 // ----- Bootstrap -----
